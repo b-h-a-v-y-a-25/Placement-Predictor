@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduPredict AI - Student Exam Performance & Placement Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area">
+                <span class="logo-icon">&#127891;</span>
+                <div>
+                    <h1 class="app-title">EduPredict AI</h1>
+                    <p class="app-subtitle">Student Academic Performance & Campus Placement Predictor</p>
+                </div>
+            </div>
+            <div class="academic-badge">
+                <span class="badge-dot"></span>
+                <span>AI Mini-Project &bull; Random Forest Model</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+
+        <!-- Top Banner / Summary Card -->
+        <section class="banner-card">
+            <div class="banner-text">
+                <h2>AI-Driven Campus Placement Readiness Evaluator</h2>
+                <p>
+                    This system applies <strong>Supervised Machine Learning (Random Forest Ensemble)</strong> to evaluate a student's
+                    comprehensive academic, technical, and soft skills profile to estimate placement probability and generate
+                    targeted developmental guidance.
+                </p>
+            </div>
+            <div class="banner-stats">
+                <div class="stat-pill">
+                    <span class="stat-label">Model Accuracy</span>
+                    <span class="stat-val">{{ metrics.get('metrics', {}).get('accuracy', 90.0) }}%</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="stat-label">F1-Score</span>
+                    <span class="stat-val">{{ metrics.get('metrics', {}).get('f1_score', 0.9329) }}</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="stat-label">Algorithms</span>
+                    <span class="stat-val">RF (100 Trees)</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Demo Profiles Bar -->
+        <section class="quick-presets-section">
+            <div class="presets-header">
+                <span class="presets-label">&#9889; Quick Demo Presets (1-Click Fill):</span>
+                <span class="presets-hint">Use these presets to instantly test different student scenarios during demonstration</span>
+            </div>
+            <div class="preset-buttons">
+                <button type="button" class="preset-btn topper-btn" onclick="loadPreset('topper')">
+                    &#127942; Top Achiever (9.15 CGPA, 0 Backlogs)
+                </button>
+                <button type="button" class="preset-btn average-btn" onclick="loadPreset('average')">
+                    &#9878;&#65039; Average Student (7.30 CGPA, 0 Backlogs)
+                </button>
+                <button type="button" class="preset-btn at-risk-btn" onclick="loadPreset('at_risk')">
+                    &#9888;&#65039; At-Risk Student (5.75 CGPA, 2 Backlogs)
+                </button>
+            </div>
+        </section>
+
+        <!-- Content Grid: Form (Left) & Results (Right) -->
+        <div class="workspace-grid">
+
+            <!-- Input Form Column -->
+            <div class="form-column">
+                <div class="card form-card">
+                    <div class="card-header">
+                        <h3>&#128221; Enter Student Profile Parameters</h3>
+                        <p class="card-desc">Provide academic, technical, and assessment metrics for evaluation</p>
+                    </div>
+
+                    <form id="prediction-form" class="prediction-form" novalidate>
+
+                        <!-- Group 1: Academic Background -->
+                        <div class="form-group-section">
+                            <h4 class="section-title">&#128218; 1. Academic Performance</h4>
+                            <div class="input-row">
+                                <div class="input-field">
+                                    <label for="cgpa">Cumulative GPA (CGPA) <span class="req">*</span></label>
+                                    <input type="number" id="cgpa" name="cgpa" step="0.01" min="0" max="10" placeholder="e.g. 7.85" required>
+                                    <small class="helper-text">Grading Scale: 0.0 - 10.0</small>
+                                </div>
+                                <div class="input-field">
+                                    <label for="backlogs">Active Backlogs / Arrears <span class="req">*</span></label>
+                                    <input type="number" id="backlogs" name="backlogs" min="0" max="20" placeholder="e.g. 0" required>
+                                    <small class="helper-text">Uncleared subjects count</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Group 2: Technical & Practical Skills -->
+                        <div class="form-group-section">
+                            <h4 class="section-title">&#128187; 2. Technical & Practical Experience</h4>
+                            <div class="input-row">
+                                <div class="input-field">
+                                    <label for="coding_test_score">Coding / DSA Test Score <span class="req">*</span></label>
+                                    <input type="number" id="coding_test_score" name="coding_test_score" min="0" max="100" placeholder="e.g. 75" required>
+                                    <small class="helper-text">Programming assessment (0 - 100)</small>
+                                </div>
+                                <div class="input-field">
+                                    <label for="projects">Major / Mini Projects <span class="req">*</span></label>
+                                    <input type="number" id="projects" name="projects" min="0" max="20" placeholder="e.g. 2" required>
+                                    <small class="helper-text">Completed software / hardware projects</small>
+                                </div>
+                            </div>
+                            <div class="input-row single-row">
+                                <div class="input-field">
+                                    <label for="internships">Internships Completed <span class="req">*</span></label>
+                                    <input type="number" id="internships" name="internships" min="0" max="10" placeholder="e.g. 1" required>
+                                    <small class="helper-text">Industry exposure & verified internships</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Group 3: Aptitude & Soft Skills -->
+                        <div class="form-group-section">
+                            <h4 class="section-title">&#129504; 3. Aptitude & Interpersonal Skills</h4>
+                            <div class="input-row">
+                                <div class="input-field">
+                                    <label for="aptitude_test_score">Aptitude & Logic Score <span class="req">*</span></label>
+                                    <input type="number" id="aptitude_test_score" name="aptitude_test_score" min="0" max="100" placeholder="e.g. 70" required>
+                                    <small class="helper-text">Quantitative & analytical test (0 - 100)</small>
+                                </div>
+                                <div class="input-field">
+                                    <label for="soft_skills_rating">Soft Skills / HR Rating <span class="req">*</span></label>
+                                    <input type="number" id="soft_skills_rating" name="soft_skills_rating" step="0.1" min="1.0" max="5.0" placeholder="e.g. 3.8" required>
+                                    <small class="helper-text">Communication & interview readiness (1.0 - 5.0)</small>
+                                </div>
+                            </div>
+                            <div class="input-row single-row">
+                                <div class="input-field">
+                                    <label for="extracurriculars">Extracurricular Activities <span class="req">*</span></label>
+                                    <select id="extracurriculars" name="extracurriculars" required>
+                                        <option value="1">Yes (Clubs, Hackathons, Volunteering, Sports)</option>
+                                        <option value="0">No (Academic Focus Only)</option>
+                                    </select>
+                                    <small class="helper-text">Active co-curricular participation</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Validation message box -->
+                        <div id="error-alert" class="alert alert-error" style="display: none;"></div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="submit" id="predict-btn" class="btn btn-primary">
+                                <span class="btn-text">&#9654; Predict Placement Outcome</span>
+                                <span class="spinner" style="display: none;"></span>
+                            </button>
+                            <button type="button" id="reset-btn" class="btn btn-secondary" onclick="resetForm()">
+                                &#8634; Reset / Clear
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Output / Results Column -->
+            <div class="results-column">
+
+                <!-- Placeholder card shown before first prediction -->
+                <div id="results-placeholder" class="card empty-card">
+                    <div class="empty-graphic">&#128202;</div>
+                    <h3>No Analysis Conducted Yet</h3>
+                    <p>Enter the student metrics on the left or select a <strong>Quick Demo Preset</strong>, then click <strong>Predict Placement Outcome</strong> to view AI predictions.</p>
+                </div>
+
+                <!-- Dynamic Result Card -->
+                <div id="results-card" class="card result-card" style="display: none;">
+                    <div class="card-header border-bottom">
+                        <div class="result-header-row">
+                            <h3>&#129302; AI Prediction Output</h3>
+                            <span id="tier-badge" class="tier-pill">Top Tier Candidate</span>
+                        </div>
+                    </div>
+
+                    <div class="result-body">
+
+                        <!-- Main Prediction Status Banner -->
+                        <div id="status-banner" class="status-banner status-placed">
+                            <div class="status-icon" id="status-icon">&#10004;</div>
+                            <div class="status-text-wrap">
+                                <span class="status-title" id="status-title">Likely to be Placed</span>
+                                <span class="status-summary" id="status-summary">High placement probability based on strong profile characteristics.</span>
+                            </div>
+                        </div>
+
+                        <!-- Probability Visual Gauge -->
+                        <div class="metric-visual-container">
+                            <div class="metric-header-row">
+                                <span class="metric-title">Placement Probability</span>
+                                <span class="metric-percent" id="prob-placed-text">88.5%</span>
+                            </div>
+                            <div class="progress-track">
+                                <div id="progress-fill" class="progress-fill" style="width: 88.5%;"></div>
+                            </div>
+                            <div class="prob-subtext">
+                                <span>Risk Probability: <strong id="prob-not-placed-text">11.5%</strong></span>
+                                <span>Threshold: <strong>50.0%</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Feature Breakdown Card -->
+                        <div class="breakdown-card">
+                            <h4>&#128269; Profile Summary Evaluated</h4>
+                            <div class="features-mini-grid" id="evaluated-profile-grid">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Actionable AI Recommendations -->
+                        <div class="recommendations-box">
+                            <h4>&#128161; Personalized AI Academic & Career Guidance</h4>
+                            <ul id="recommendations-list" class="recommendations-list">
+                                <!-- Populated dynamically by JS -->
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Model Architecture & Syllabus Reference Card -->
+                <div class="card info-card">
+                    <div class="card-header collapsible-header" onclick="toggleDetails()">
+                        <div class="flex-title">
+                            <span class="info-icon">&#128300;</span>
+                            <div>
+                                <h4>Academic Model Details & Syllabus Alignment</h4>
+                                <small>Click to expand machine learning architecture and test metrics</small>
+                            </div>
+                        </div>
+                        <span id="details-arrow" class="arrow">&#9660;</span>
+                    </div>
+
+                    <div id="details-content" class="collapsible-content">
+                        <div class="details-inner">
+                            <div class="spec-row">
+                                <span>Algorithm</span>
+                                <strong>Random Forest Classifier (Ensemble of 100 Trees)</strong>
+                            </div>
+                            <div class="spec-row">
+                                <span>Baseline Model</span>
+                                <strong>Decision Tree Classifier (Max Depth: 5)</strong>
+                            </div>
+                            <div class="spec-row">
+                                <span>Preprocessing</span>
+                                <strong>StandardScaler Normalization (Z-score: (x - &mu;) / &sigma;)</strong>
+                            </div>
+                            <div class="spec-row">
+                                <span>Training Records</span>
+                                <strong>800 Student Records (Stratified 80/20 split)</strong>
+                            </div>
+                            <div class="spec-row">
+                                <span>Evaluation Metrics</span>
+                                <strong>Accuracy: 90.0% | Precision: 89.7% | Recall: 97.2%</strong>
+                            </div>
+
+                            <h5 class="mt-3">Feature Importance Ranking:</h5>
+                            <div class="feat-bars" id="feature-importance-list">
+                                <div class="feat-bar-item">
+                                    <div class="feat-name-row"><span>CGPA</span><span>33.4%</span></div>
+                                    <div class="mini-bar"><div class="mini-fill" style="width: 33.4%;"></div></div>
+                                </div>
+                                <div class="feat-bar-item">
+                                    <div class="feat-name-row"><span>Active Backlogs</span><span>22.1%</span></div>
+                                    <div class="mini-bar"><div class="mini-fill" style="width: 22.1%;"></div></div>
+                                </div>
+                                <div class="feat-bar-item">
+                                    <div class="feat-name-row"><span>Coding Test Score</span><span>21.1%</span></div>
+                                    <div class="mini-bar"><div class="mini-fill" style="width: 21.1%;"></div></div>
+                                </div>
+                                <div class="feat-bar-item">
+                                    <div class="feat-name-row"><span>Aptitude Test Score</span><span>10.8%</span></div>
+                                    <div class="mini-bar"><div class="mini-fill" style="width: 10.8%;"></div></div>
+                                </div>
+                                <div class="feat-bar-item">
+                                    <div class="feat-name-row"><span>Soft Skills Rating</span><span>4.6%</span></div>
+                                    <div class="mini-bar"><div class="mini-fill" style="width: 4.6%;"></div></div>
+                                </div>
+                                <div class="feat-bar-item">
+                                    <div class="feat-name-row"><span>Projects</span><span>4.6%</span></div>
+                                    <div class="mini-bar"><div class="mini-fill" style="width: 4.6%;"></div></div>
+                                </div>
+                                <div class="feat-bar-item">
+                                    <div class="feat-name-row"><span>Internships</span><span>3.0%</span></div>
+                                    <div class="mini-bar"><div class="mini-fill" style="width: 3.0%;"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <p>
+                <strong>EduPredict AI</strong> &bull; College Mini-Project Submission for Artificial Intelligence & Machine Learning
+            </p>
+            <p class="footer-sub">
+                Implemented using Python, Scikit-learn, and Flask &bull; Offline &amp; Lightweight Local Architecture
+            </p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
